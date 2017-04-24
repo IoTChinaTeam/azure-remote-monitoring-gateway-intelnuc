@@ -14,6 +14,29 @@
 
 #include <parson.h>
 
+static char deviceInfo[] = "{\
+  'ObjectType': 'DeviceInfo',\
+  'Version': '1.0',\
+  'DeviceProperties': {\
+    'HubEnabledState': true,\
+	'DeviceId': 'BLE1'\
+  },\
+'Commands': [{\
+  'Name': 'ShowMessage',\
+  'Parameters' : [{\
+	'Name': 'Show server message',\
+	'Type' : 'string'\
+   }]\
+  }],\
+  'Telemetry': [\
+    {\
+      'Name': 'Temperature',\
+      'DisplayName': 'Temperature',\
+      'Type': 'double'\
+    }\
+  ]\
+}";
+
 typedef struct SIMULATEDDEVICE_DATA_TAG
 {
     BROKER_HANDLE       broker;
@@ -21,6 +44,7 @@ typedef struct SIMULATEDDEVICE_DATA_TAG
     const char *        fakeMacAddress;
     unsigned int        messagePeriod;
     unsigned int        simulatedDeviceRunning : 1;
+	bool				isFirstMessage;
 } SIMULATEDDEVICE_DATA;
 
 typedef struct SIMULATEDDEVICE_CONFIG_TAG
@@ -138,14 +162,30 @@ static int simulated_device_worker(void * user_data)
                     }
                     else
                     {
-                        (void)printf("Device: %s, Temperature: %.2f\r\n",
-                            module_data->fakeMacAddress,
-                            avgTemperature + additionalTemp
-                            );
-                        (void)fflush(stdout);
+						if (module_data->isFirstMessage)
+						{
+							(void)printf("Device: %s, Update device info\r\n",
+								module_data->fakeMacAddress,
+								avgTemperature + additionalTemp
+							);
+							(void)fflush(stdout);
 
-                        newMessageCfg.size = strlen(msgText);
-                        newMessageCfg.source = (const unsigned char*)msgText;
+							module_data->isFirstMessage = 0;
+							newMessageCfg.size = strlen(deviceInfo);
+							newMessageCfg.source = (const unsigned char*)deviceInfo;
+						}
+						else
+						{
+							(void)printf("Device: %s, Temperature: %.2f\r\n",
+								module_data->fakeMacAddress,
+								avgTemperature + additionalTemp
+							);
+							(void)fflush(stdout);
+
+							newMessageCfg.size = strlen(msgText);
+							newMessageCfg.source = (const unsigned char*)msgText;
+						}
+
 
                         MESSAGE_HANDLE newMessage = Message_Create(&newMessageCfg);
                         if (newMessage == NULL)
@@ -235,7 +275,7 @@ static MODULE_HANDLE SimulatedDevice_Create(BROKER_HANDLE broker, const void* co
                 result->fakeMacAddress = newFakeAddress;
                 result -> messagePeriod = config -> messagePeriod;
                 result->simulatedDeviceThread = NULL;
-
+				result->isFirstMessage = 1;
             }
 
         }
