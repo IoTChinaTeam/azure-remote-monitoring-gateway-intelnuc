@@ -12,6 +12,7 @@ add_subdirectory(gwmessage_ut)
 add_subdirectory(message_q_ut)
 add_subdirectory(dynamic_loader_ut)
 add_subdirectory(module_loader_ut)
+
 if(${enable_java_binding})
     add_subdirectory(java_loader_ut)
 endif()
@@ -28,12 +29,12 @@ if(${enable_nodejs_binding})
 endif()
 
 if (${enable_native_remote_modules})
-    add_subdirectory(control_msg_ut)
     add_subdirectory(outprocess_loader_ut)
     add_subdirectory(outprocess_module_ut)
 endif()
 
 if(${run_e2e_tests})
     add_subdirectory(gateway_e2e)
+    add_subdirectory(performance_e2e)
 endif()
 

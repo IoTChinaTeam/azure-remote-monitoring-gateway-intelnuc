@@ -23,13 +23,37 @@ if(WIN32)
     include_directories(${GW_INC}/windows )
 elseif(UNIX) # LINUX or APPLE
     include_directories(${GW_INC}/linux)
-endif()
+endif() 
 
 #setting the dynamic_loader file based on OS that it is used
 if(WIN32)
     set(dynamic_library_c_file ./adapters/dynamic_library_windows.c ./adapters/gb_library_windows.c)
 elseif(UNIX) # LINUX or APPLE
     set(dynamic_library_c_file ./adapters/dynamic_library_linux.c ./adapters/gb_library_linux.c )
+endif()
+
+# Build libuv with an OS-appropriate script
+if (${enable_native_remote_modules} OR ${enable_java_remote_modules})
+    if(WIN32)
+        if(8 EQUAL CMAKE_SIZEOF_VOID_P)
+            message(STATUS "Building libuv for 64-bit Windows...")
+            set(build_libuv build_libuv.cmd x64)
+        else()
+            message(STATUS "Building libuv for 32-bit Windows...")
+            set(build_libuv build_libuv.cmd)
+        endif()
+    elseif(LINUX)
+        message(STATUS "Building libuv for Linux...")
+        set(build_libuv ./build_libuv.sh)
+    elseif(APPLE)
+        message(STATUS "Building libuv for macOS...")
+        set(build_libuv ./build_libuv_macos.sh)
+    endif()
+
+    execute_process (
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/tools/
+        COMMAND ${build_libuv}
+    )
 endif()
 
 #setting specific libraries to be loaded based on OS (for example, Linux needs "-ldl", windows does not)
@@ -156,7 +180,7 @@ if(${enable_nodejs_binding})
     include_directories(../bindings/nodejs/inc)
 endif()
 
-if(${enable_native_remote_modules})
+if(${enable_native_remote_modules} OR ${enable_java_remote_modules})
     set(gateway_c_sources
         ${gateway_c_sources}
         ../proxy/message/src/control_message.c
@@ -175,6 +199,8 @@ if(${enable_native_remote_modules})
     include_directories( ../proxy/outprocess/inc)
     include_directories( ../proxy/message/inc)
 
+    include_directories(${CMAKE_SOURCE_DIR}/build_libuv/dist/include)
+    link_directories(${CMAKE_SOURCE_DIR}/build_libuv/dist/lib)
 endif()
 
 set(module_host_sources
@@ -207,21 +233,24 @@ add_library(gateway_static STATIC
     ${gateway_h_sources}
 )
 
+if(${enable_native_remote_modules} OR ${enable_java_remote_modules})
+    if(WIN32)
+        target_link_libraries(gateway ${CMAKE_SOURCE_DIR}/build_libuv/dist/lib/libuv.lib Psapi.lib Iphlpapi.lib Userenv.lib)
+        target_link_libraries(gateway_static ${CMAKE_SOURCE_DIR}/build_libuv/dist/lib/libuv.lib Psapi.lib Iphlpapi.lib Userenv.lib)
+        target_link_libraries(module_host_static ${CMAKE_SOURCE_DIR}/build_libuv/dist/lib/libuv.lib Psapi.lib Iphlpapi.lib Userenv.lib)
+    else()
+        target_link_libraries(gateway ${CMAKE_SOURCE_DIR}/build_libuv/dist/lib/libuv.a)
+        target_link_libraries(gateway_static ${CMAKE_SOURCE_DIR}/build_libuv/dist/lib/libuv.a)
+        target_link_libraries(module_host_static ${CMAKE_SOURCE_DIR}/build_libuv/dist/lib/libuv.a)
+    endif()
+endif()
+
+target_link_libraries(gateway parson nanomsg aziotsharedutil ${dynamic_loader_library})
+target_link_libraries(gateway_static parson nanomsg aziotsharedutil ${dynamic_loader_library})
 target_link_libraries(module_host_static parson nanomsg aziotsharedutil ${dynamic_loader_library})
 
-if(WIN32)
-    target_link_libraries(gateway parson nanomsg aziotsharedutil ${dynamic_loader_library})
-
-    target_link_libraries(gateway_static parson nanomsg aziotsharedutil ${dynamic_loader_library})
-else()
-    target_link_libraries(gateway parson nanomsg aziotsharedutil ${dynamic_loader_library})
-    target_link_libraries(gateway ${NN_REQUIRED_LIBRARIES})
-    target_link_libraries(gateway m)
-
-    target_link_libraries(gateway_static parson nanomsg aziotsharedutil ${dynamic_loader_library})
-    target_link_libraries(gateway_static ${NN_REQUIRED_LIBRARIES})
-    target_link_libraries(gateway_static m)
-
+if(NOT WIN32)
+    target_link_libraries(gateway m ${NN_REQUIRED_LIBRARIES})
     target_link_libraries(module_host_static m ${NN_REQUIRED_LIBRARIES})
 endif()
 
@@ -253,7 +282,7 @@ if(${run_unittests})
 endif()
 
 #############################################################
-########################INSTALL STUFF########################
+####################### INSTALL STUFF #######################
 #############################################################
 
 #installs the gateway libs and headers

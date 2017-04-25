@@ -161,6 +161,12 @@ module.exports = [
     },
     {
         "taskType": "regexReplaceTask",
+        "filePath": "samples/java_sample/src/java_sample_mac.json",
+        "search": "\\d+\.\\d+\.\\d+",
+        "replaceString": "bindings.java"
+    },
+    {
+        "taskType": "regexReplaceTask",
         "filePath": "samples/java_sample/src/java_sample_win.json",
         "search": "\\d+\.\\d+\.\\d+",
         "replaceString": "bindings.java"
@@ -175,5 +181,12 @@ module.exports = [
         "search": "//mavenns:project/mavenns:version",
         "nsmap": {"mavenns": "http://maven.apache.org/POM/4.0.0"},
         "replaceString": "proxygateway.java",
+    },
+    {
+        "taskType": "xmlReplaceTask",
+        "filePath": "proxy/gateway/java/gateway-remote-module/pom.xml",
+        "search": "//mavenns:project/mavenns:dependencies/mavenns:dependency[mavenns:artifactId='gateway-java-binding']/mavenns:version", 
+        "nsmap": {"mavenns": "http://maven.apache.org/POM/4.0.0"},
+        "replaceString": "bindings.java",
     },
 ];

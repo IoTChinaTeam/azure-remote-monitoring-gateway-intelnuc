@@ -4,7 +4,7 @@
 cmake_minimum_required(VERSION 2.8.12)
 project(azure_iot_gateway_sdk)
 
-set(GATEWAY_VERSION 1.0.3 CACHE INTERNAL "")
+set(GATEWAY_VERSION 1.0.4 CACHE INTERNAL "")
 set(COMPANY_NAME "Microsoft")
 SET(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 
@@ -76,8 +76,8 @@ option(run_as_a_service "Flags that we have the goal of running gateway as a ser
 option(enable_dotnet_binding "set enable_dotnet_binding to ON to build dotnet binding host binaries (default is OFF)" OFF)
 option(enable_dotnet_core_binding "set enable_dotnet_core_binding to ON to build dotnet core binding host binaries (default is OFF)" OFF)
 option(enable_ble_module "set enable_ble_module to OFF to remove ble module from gateway build (default is ON)" ON)
-option(enable_native_remote_modules "Build the infrastructure required to support native remote modules" ON)
-option(enable_java_remote_modules "Build the infrastructure required to support java remote modules" OFF)
+option(enable_native_remote_modules "Build the infrastructure required to support native remote modules (default is ON)" ON)
+option(enable_java_remote_modules "Build the infrastructure required to support java remote modules (default is OFF)" OFF)
 option(use_amqp "set use_amqp to ON if amqp is to be used, set to OFF to not use amqp" ON)
 option(use_http "set use_http to ON if http is to be used, set to OFF to not use http" ON)
 option(use_mqtt "set use_mqtt to ON if mqtt is to be used, set to OFF to not use mqtt" ON)
@@ -288,10 +288,10 @@ set(dotnet_host_binding_dll ${CMAKE_CURRENT_BINARY_DIR}/bindings/dotnet/${CMAKE_
 set(dotnet_core_host_binding_dll ${CMAKE_CURRENT_BINARY_DIR}/bindings/dotnetcore/$(Configuration)/dotnetcore.dll CACHE INTERNAL "The location of dotnetcore.dll" FORCE)
 set(dotnet_core_host_binding_so ${CMAKE_CURRENT_BINARY_DIR}/bindings/dotnetcore/libdotnetcore.so CACHE INTERNAL "The location of libdotnetcore.so" FORCE)
 
-set(dotnet_core_managed_binding_dll ${CMAKE_CURRENT_BINARY_DIR}/../bindings/dotnetcore/dotnet-core-binding/Microsoft.Azure.Devices.Gateway/bin/${CMAKE_BUILD_TYPE}/netstandard1.6/Microsoft.Azure.Devices.Gateway.dll CACHE INTERNAL "The location of the Microsoft.Azure.Devices.Gateway.dll" FORCE)
-set(dotnet_core_e2etest_module_dll ${CMAKE_CURRENT_BINARY_DIR}/../bindings/dotnetcore/dotnet-core-binding/E2ETestModule/bin/${CMAKE_BUILD_TYPE}/netstandard1.6/E2ETestModule.dll CACHE INTERNAL "The location of the E2ETestModule.dll" FORCE)
-set(dotnet_core_sensor_module_dll ${CMAKE_CURRENT_BINARY_DIR}/../samples/dotnet_core_module_sample/modules/SensorModule/bin/${CMAKE_BUILD_TYPE}/netstandard1.6/SensorModule.dll CACHE INTERNAL "The location of the SensorModule.dll" FORCE)
-set(dotnet_core_printer_module_dll ${CMAKE_CURRENT_BINARY_DIR}/../samples/dotnet_core_module_sample/modules/PrinterModule/bin/${CMAKE_BUILD_TYPE}/netstandard1.6/PrinterModule.dll CACHE INTERNAL "The location of the PrinterModule.dll" FORCE)
+set(dotnet_core_managed_binding_dll ${CMAKE_CURRENT_BINARY_DIR}/../bindings/dotnetcore/dotnet-core-binding/Microsoft.Azure.Devices.Gateway/bin/${CMAKE_BUILD_TYPE}/netstandard1.3/Microsoft.Azure.Devices.Gateway.dll CACHE INTERNAL "The location of the Microsoft.Azure.Devices.Gateway.dll" FORCE)
+set(dotnet_core_e2etest_module_dll ${CMAKE_CURRENT_BINARY_DIR}/../bindings/dotnetcore/dotnet-core-binding/E2ETestModule/bin/${CMAKE_BUILD_TYPE}/netstandard1.3/E2ETestModule.dll CACHE INTERNAL "The location of the E2ETestModule.dll" FORCE)
+set(dotnet_core_sensor_module_dll ${CMAKE_CURRENT_BINARY_DIR}/../samples/dotnet_core_module_sample/modules/SensorModule/bin/${CMAKE_BUILD_TYPE}/netstandard1.3/SensorModule.dll CACHE INTERNAL "The location of the SensorModule.dll" FORCE)
+set(dotnet_core_printer_module_dll ${CMAKE_CURRENT_BINARY_DIR}/../samples/dotnet_core_module_sample/modules/PrinterModule/bin/${CMAKE_BUILD_TYPE}/netstandard1.3/PrinterModule.dll CACHE INTERNAL "The location of the PrinterModule.dll" FORCE)
 
 function(install_binaries whatIsBuilding whatIsBuildingLocation whatIsBinaryLocation)
   add_custom_command(TARGET ${whatIsBuilding} POST_BUILD
