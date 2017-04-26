@@ -24,7 +24,7 @@ static char deviceInfo[] = "{\
 'Commands': [{\
   'Name': 'TelemetrySwith',\
   'Parameters' : [{\
-	'Name': '1/0 ON/OFF the telemetry updating',\
+	'Name': 'TelemetryStatus',\
 	'Type' : 'int'\
    }]\
   }],\
@@ -44,7 +44,8 @@ typedef struct SIMULATEDDEVICE_DATA_TAG
     const char *        fakeMacAddress;
     unsigned int        messagePeriod;
     unsigned int        simulatedDeviceRunning : 1;
-	bool				isFirstMessage;
+	unsigned int		isFirstMessage : 1;
+	unsigned int		telemetryStatus : 1;
 } SIMULATEDDEVICE_DATA;
 
 typedef struct SIMULATEDDEVICE_CONFIG_TAG
@@ -84,6 +85,22 @@ static void SimulatedDevice_Receive(MODULE_HANDLE moduleHandle, MESSAGE_HANDLE m
                     {
                         (void)printf("  %s = %s\r\n", keys[i], values[i]);
                     }
+
+					char * p = strstr(content->buffer, "\"TelemetryStatus\"");
+					if (p)
+					{
+						int value = atoi(p + strlen("TelemetryStatus") + 3);
+						value = (value == 0) ? 0 : 1;
+						((SIMULATEDDEVICE_DATA*)moduleHandle)->telemetryStatus = value;
+						if (value)
+						{
+							(void)printf("Start telemetry\r\n");
+						}
+						else
+						{
+							(void)printf("Stop telemetry\r\n");
+						}
+					}
 
                     (void)printf("Content:\r\n");
                     (void)printf("  %.*s\r\n", (int)content->size, content->buffer);
@@ -131,6 +148,11 @@ static int simulated_device_worker(void * user_data)
 
         while (module_data->simulatedDeviceRunning)
         {
+			if (!module_data->telemetryStatus)
+			{
+				ThreadAPI_Sleep(module_data->messagePeriod);
+				continue;
+			}
             MESSAGE_CONFIG newMessageCfg;
             MAP_HANDLE newProperties = Map_Create(NULL);
             if (newProperties == NULL)
@@ -276,6 +298,7 @@ static MODULE_HANDLE SimulatedDevice_Create(BROKER_HANDLE broker, const void* co
                 result -> messagePeriod = config -> messagePeriod;
                 result->simulatedDeviceThread = NULL;
 				result->isFirstMessage = 1;
+				result->telemetryStatus = 1;
             }
 
         }

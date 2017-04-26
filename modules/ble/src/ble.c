@@ -30,6 +30,28 @@
 
 #include <parson.h>
 
+static char deviceInfo[] = "{\
+  'ObjectType': 'DeviceInfo',\
+  'Version': '1.0',\
+  'DeviceProperties': {\
+    'HubEnabledState': true,\
+	'DeviceId': 'BLE1'\
+  },\
+'Commands': [{\
+  'Name': 'ShowMessage',\
+  'Parameters' : [{\
+	'Name': 'Show server message',\
+	'Type' : 'string'\
+   }]\
+  }],\
+  'Telemetry': [\
+    {\
+      'Name': 'Temperature',\
+      'DisplayName': 'Temperature',\
+      'Type': 'double'\
+    }\
+  ]\
+}";
 DEFINE_ENUM_STRINGS(BLEIO_SEQ_INSTRUCTION_TYPE, BLEIO_SEQ_INSTRUCTION_TYPE_VALUES);
 
 typedef struct BLE_HANDLE_DATA_TAG
@@ -323,6 +345,7 @@ static void* BLE_ParseConfigurationFromJson(const char* configuration)
                                 else
                                 {
                                     ble_config.device_config.ble_controller_index = controller_index;
+									ble_config.device_config.isFirstRun = true;
                                     ble_config.instructions = ble_instructions;
 
                                     /*Codes_SRS_BLE_17_001: [ BLE_ParseConfigurationFromJson shall allocate a new BLE_CONFIG structure containing BLE instructions and configuration as parsed from the JSON input. ] */
@@ -672,8 +695,14 @@ static void on_read_complete(
                     {
                         MESSAGE_CONFIG message_config;
                         message_config.sourceProperties = message_properties;
-                        message_config.size = BUFFER_length(data); // "data" MUST NOT be NULL here
-                        message_config.source = (const unsigned char*)BUFFER_u_char(data);
+			            if (handle_data->device_config.isFirstRun) {
+							handle_data->device_config.isFirstRun = false;
+			              message_config.size = BUFFER_length((BUFFER_HANDLE)deviceInfo);
+			              message_config.source = (const unsigned char *)BUFFER_u_char((BUFFER_HANDLE)deviceInfo);
+			            } else {
+							message_config.size = BUFFER_length(data); // "data" MUST NOT be NULL here
+							message_config.source = (const unsigned char *)BUFFER_u_char(data);
+			            }
 
                         MESSAGE_HANDLE message = Message_Create(&message_config);
                         if (message == NULL)

@@ -35,6 +35,8 @@ typedef struct BLE_DEVICE_CONFIG_TAG
      * used.
      */
     uint8_t ble_controller_index;
+
+	int isFirstRun : 1;
 }BLE_DEVICE_CONFIG;
 
 typedef struct BLEIO_GATT_INSTANCE_TAG* BLEIO_GATT_HANDLE;
