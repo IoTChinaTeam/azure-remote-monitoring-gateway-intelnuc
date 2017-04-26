@@ -9,9 +9,9 @@
         }
       },
       "args": {
-        "IoTHubName": "<<insert here IoTHubName>>",
-        "IoTHubSuffix": "<<insert here IoTHubSuffix>>",
-        "Transport": "HTTP"
+        "IoTHubName": "tazorm1v6test21048",
+        "IoTHubSuffix": "azure-devices.cn",
+        "Transport": "amqp"
       }
     },
     {
@@ -25,15 +25,25 @@
       "args": [
         {
           "macAddress": "01:01:01:01:01:01",
-          "deviceId": "<<insert here deviceId>>",
-          "deviceKey": "<<insert here deviceKey>>"
+          "deviceId": "BLE1",
+          "deviceKey": "5wlxFxkM9pkcqroX/KBVFBFCe28q+YYP2eH+tNbzBIk="
         },
         {
           "macAddress": "02:02:02:02:02:02",
-          "deviceId": "<<insert here deviceId>>",
-          "deviceKey": "<<insert here deviceKey>>"
+          "deviceId": "BLE2",
+          "deviceKey": "pN2U5pUKy6Jeu7g6PPxJqfkPIFiEc1HUO0sZoB7KVRY="
         }
       ]
+    },
+    {
+      "name": "hello_world",
+      "loader": {
+        "name": "native",
+        "entrypoint": {
+          "module.path": "..\\..\\..\\modules\\hello_world\\Debug\\hello_world.dll"
+        }
+      },
+      "args": null
     },
     {
       "name": "BLE1",
@@ -45,7 +55,8 @@
       },
       "args": {
         "macAddress": "01:01:01:01:01:01",
-        "messagePeriod": 2000
+        "messagePeriod": 2000,
+        "Test": "text"
       }
     },
     {
@@ -84,13 +95,16 @@
       "sink": "mapping"
     },
     {
-      "source": "BLE2",
+      "source": "hello_world",
       "sink": "mapping"
     },
+
+
     {
       "source": "mapping",
       "sink": "IotHub"
     },
+
     {
       "source": "IotHub",
       "sink": "mapping"

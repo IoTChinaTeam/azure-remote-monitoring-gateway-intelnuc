@@ -22,10 +22,10 @@ static char deviceInfo[] = "{\
 	'DeviceId': 'BLE1'\
   },\
 'Commands': [{\
-  'Name': 'ShowMessage',\
+  'Name': 'TelemetrySwith',\
   'Parameters' : [{\
-	'Name': 'Show server message',\
-	'Type' : 'string'\
+	'Name': '1/0 ON/OFF the telemetry updating',\
+	'Type' : 'int'\
    }]\
   }],\
   'Telemetry': [\
