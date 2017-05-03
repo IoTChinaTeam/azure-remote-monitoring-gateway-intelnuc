@@ -30,28 +30,34 @@
 
 #include <parson.h>
 
+
 static char deviceInfo[] = "{\
-  'ObjectType': 'DeviceInfo',\
-  'Version': '1.0',\
-  'DeviceProperties': {\
-    'HubEnabledState': true,\
-	'DeviceId': 'BLE1'\
+  \"ObjectType\": \"DeviceInfo\",\
+  \"Version\": \"1.0\",\
+  \"DeviceProperties\": {\
+    \"HubEnabledState\": true\
   },\
-'Commands': [{\
-  'Name': 'ShowMessage',\
-  'Parameters' : [{\
-	'Name': 'Show server message',\
-	'Type' : 'string'\
+\"Commands\": [{\
+  \"Name\": \"TelemetrySwith\",\
+  \"Parameters\" : [{\
+	\"Name\": \"TelemetryStatus\",\
+	\"Type\" : \"int\"\
    }]\
   }],\
-  'Telemetry': [\
+  \"Telemetry\": [\
     {\
-      'Name': 'Temperature',\
-      'DisplayName': 'Temperature',\
-      'Type': 'double'\
+      \"Name\": \"Temperature\",\
+      \"DisplayName\": \"Temperature\",\
+      \"Type\": \"double\"\
+    },\
+	{\
+      \"Name\": \"Humidity\",\
+      \"DisplayName\": \"Humidity\",\
+      \"Type\": \"double\"\
     }\
   ]\
 }";
+
 DEFINE_ENUM_STRINGS(BLEIO_SEQ_INSTRUCTION_TYPE, BLEIO_SEQ_INSTRUCTION_TYPE_VALUES);
 
 typedef struct BLE_HANDLE_DATA_TAG
@@ -606,6 +612,26 @@ static int format_timestamp(char* dest, size_t dest_size)
     return result;
 }
 
+static void sensortag_temp_convert(
+    uint16_t rawAmbTemp,
+    uint16_t rawObjTemp,
+    float *tAmb,
+    float *tObj
+)
+{
+    const float SCALE_LSB = 0.03125;
+    float t;
+    int it;
+
+    it = (int)((rawObjTemp) >> 2);
+    t = ((float)(it)) * SCALE_LSB;
+    *tObj = t;
+
+    it = (int)((rawAmbTemp) >> 2);
+    t = (float)it;
+    *tAmb = t * SCALE_LSB;
+}
+
 static void on_read_complete(
     BLEIO_SEQ_HANDLE bleio_seq_handle,
     void* context,
@@ -697,11 +723,32 @@ static void on_read_complete(
                         message_config.sourceProperties = message_properties;
 			            if (handle_data->device_config.isFirstRun) {
 							handle_data->device_config.isFirstRun = false;
-			              message_config.size = BUFFER_length((BUFFER_HANDLE)deviceInfo);
-			              message_config.source = (const unsigned char *)BUFFER_u_char((BUFFER_HANDLE)deviceInfo);
+			              message_config.size = strlen(deviceInfo);  
+			              message_config.source = (const unsigned char *)deviceInfo;
+						  
+						  (void)printf("Device: %s, Update device info\r\n", mac_address);
+						  (void)fflush(stdout);
+						  
+						  
 			            } else {
-							message_config.size = BUFFER_length(data); // "data" MUST NOT be NULL here
-							message_config.source = (const unsigned char *)BUFFER_u_char(data);
+
+							char msgText[128];
+							uint16_t* temps = (uint16_t *)BUFFER_u_char(data);
+							float ambient, object;
+							sensortag_temp_convert(temps[0], temps[1], &ambient, &object);
+							printf("[%s] %s: (%f, %f)\r\n",
+								timestamp,
+								"DATA",
+								ambient,
+								object
+							);
+
+							sprintf_s(msgText, sizeof(msgText), "{\"temperature\":%.2f, \"Humidity\":%.2f}", object, ambient);
+							message_config.size = strlen(msgText);  
+							message_config.source = (const unsigned char *)msgText;
+
+							//message_config.size = BUFFER_length(data); // "data" MUST NOT be NULL here
+							//message_config.source = (const unsigned char *)BUFFER_u_char(data);
 			            }
 
                         MESSAGE_HANDLE message = Message_Create(&message_config);

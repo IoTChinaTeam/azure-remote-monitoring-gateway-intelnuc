@@ -15,24 +15,23 @@
 #include <parson.h>
 
 static char deviceInfo[] = "{\
-  'ObjectType': 'DeviceInfo',\
-  'Version': '1.0',\
-  'DeviceProperties': {\
-    'HubEnabledState': true,\
-	'DeviceId': 'BLE1'\
+  \"ObjectType\": \"DeviceInfo\",\
+  \"Version\": \"1.0\",\
+  \"DeviceProperties\": {\
+    \"HubEnabledState\": true\
   },\
-'Commands': [{\
-  'Name': 'TelemetrySwith',\
-  'Parameters' : [{\
-	'Name': 'TelemetryStatus',\
-	'Type' : 'int'\
+\"Commands\": [{\
+  \"Name\": \"TelemetrySwith\",\
+  \"Parameters\" : [{\
+	\"Name\": \"TelemetryStatus\",\
+	\"Type\" : \"int\"\
    }]\
   }],\
-  'Telemetry': [\
+  \"Telemetry\": [\
     {\
-      'Name': 'Temperature',\
-      'DisplayName': 'Temperature',\
-      'Type': 'double'\
+      \"Name\": \"Temperature\",\
+      \"DisplayName\": \"Temperature\",\
+      \"Type\": \"double\"\
     }\
   ]\
 }";
@@ -86,7 +85,7 @@ static void SimulatedDevice_Receive(MODULE_HANDLE moduleHandle, MESSAGE_HANDLE m
                         (void)printf("  %s = %s\r\n", keys[i], values[i]);
                     }
 
-					char * p = strstr(content->buffer, "\"TelemetryStatus\"");
+					char * p = strstr((const char*)content->buffer, "\"TelemetryStatus\"");
 					if (p)
 					{
 						int value = atoi(p + strlen("TelemetryStatus") + 3);
@@ -186,10 +185,7 @@ static int simulated_device_worker(void * user_data)
                     {
 						if (module_data->isFirstMessage)
 						{
-							(void)printf("Device: %s, Update device info\r\n",
-								module_data->fakeMacAddress,
-								avgTemperature + additionalTemp
-							);
+							(void)printf("Device: %s, Update device info\r\n", module_data->fakeMacAddress);
 							(void)fflush(stdout);
 
 							module_data->isFirstMessage = 0;
